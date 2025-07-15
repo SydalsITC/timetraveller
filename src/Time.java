@@ -17,12 +17,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-/*
- * configuration section
- */
-
-int serverPort 8080;
-
 
 /*
  * ==== code =============================
@@ -30,18 +24,42 @@ int serverPort 8080;
 
 public class Time {
 
+    static String rootText  = "<html><body><h1>timetraveller</h1>\n<p>For more information, please read <a href='/about'>/about</a>.</p></body></html>\n";
+    static String aboutText = "<html><body>\n<h1>timetraveller</h1>\n<p>This is a simple web server that answers with the current time as seconds since 1970 on <a href='/epoch'>/epoch</a>. It's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n</body></html>\n";
+
     // main class
     public static void main(String[] args) throws Exception {
-        HttpServer timeSrv = HttpServer.create(new InetSocketAddress(serverPort), 0);
+        HttpServer timeSrv = HttpServer.create(new InetSocketAddress(8080), 0);
 
-        timeSrv.createContext("/ss1970", new SecondsSince1970Handler());
+        timeSrv.createContext("/",      new textHandler(rootText)  );
+        timeSrv.createContext("/about", new textHandler(aboutText) );
+        timeSrv.createContext("/epoch", new secondsSince1970Handler() );
 
-        server.setExecutor(null); // creates a default executor
-        server.start();
+        timeSrv.setExecutor(null); // creates a default executor
+        timeSrv.start();
     }
 
+
+    // handler to send a simple text
+    static class textHandler implements HttpHandler {
+
+	private final String responseText;
+
+	public textHandler(String responseText) {
+	    this.responseText = responseText;
+	}
+
+	public void handle(HttpExchange c) throws IOException {
+	    c.sendResponseHeaders(200, responseText.length());
+	    OutputStream rs = c.getResponseBody();
+	    rs.write(responseText.getBytes());
+	    rs.close();
+	}
+    }
+
+
     // handler to print unix epoch/seconds since 1970
-    static class SecondsSince1970Handler implements HttpHandler {
+    static class secondsSince1970Handler implements HttpHandler {
         @Override
         public void handle(HttpExchange c) throws IOException {
 
@@ -49,10 +67,11 @@ public class Time {
 
             String responseText = Long.toString(secondsSinceEpoch) + "\n";
 
-            c.sendResponseHeaders(200, response.length());
+            c.sendResponseHeaders(200, responseText.length());
             OutputStream rs = c.getResponseBody();
             rs.write(responseText.getBytes());
             rs.close();
         }
     }
+
 }
