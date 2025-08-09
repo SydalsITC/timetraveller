@@ -21,25 +21,28 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneOffset;
 
-
 /*
  * ==== code =============================
  */
 
 public class Time {
 
-    static String rootText  = "<html><body><h1>timetraveller</h1>\n<p>For more information, please read <a href='/about'>/about</a>.</p></body></html>\n";
-    static String aboutText = "<html><body>\n<h1>timetraveller</h1>\n<p>This is a simple web server that answers with the current time as seconds since 1970 on <a href='/ss1970'>/ss1970</a>. It's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n</body></html>\n";
+    static String headText  = "<html><head><style>body{font-family: Arial, sans-serif;}</style></head><body>\n<h1>timetraveller app</h1>\n";
+    static String rootText  = headText + "<p>For more information, please read <a href='/about'>/about</a>.</p></body></html>\n";
+    static String aboutText = headText + "<p>This is a simple web server that's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n<ul>\n  <li/>It shows the current time as text at <a href='/now'>/now</a> and as seconds since 1970 at <a href='/epoch'>/epoch</a>.\n  <li/>On /diff/<i>yourTimeInSecondsSince1970</i> you'll find the difference between given and internal time.\n  <li/>Find more output under /time/xxx in different formats; see Readme.md for details.\n  <li/>At <a href='/FAKETIME'>/FAKETIME</a> and <a href='/LD_PRELOAD'>/LD_PRELOAD</a> it displays the content of the respective environment variable.\n</ul>\n</body></html>\n";
 
     // main class
     public static void main(String[] args) throws Exception {
         HttpServer timeSrv = HttpServer.create(new InetSocketAddress(8080), 0);
 
-        timeSrv.createContext("/",       new textHandler(rootText)  );
-        timeSrv.createContext("/about",  new textHandler(aboutText) );
-        timeSrv.createContext("/ss1970", new textHandler("") );
-        timeSrv.createContext("/diff",   new diffHandler() );
-        timeSrv.createContext("/time",   new timeHandler() );
+        timeSrv.createContext("/",           new textHandler(rootText)  );
+        timeSrv.createContext("/about",      new textHandler(aboutText) );
+        timeSrv.createContext("/now",        new textHandler("now") );
+        timeSrv.createContext("/epoch",      new textHandler("epoch") );
+        timeSrv.createContext("/FAKETIME",   new textHandler("FAKETIME") );
+        timeSrv.createContext("/LD_PRELOAD", new textHandler("LD_PRELOAD") );
+        timeSrv.createContext("/diff",       new diffHandler() );
+        timeSrv.createContext("/time",       new timeHandler() );
 
         timeSrv.setExecutor(null); // creates a default executor
         timeSrv.start();
@@ -65,10 +68,22 @@ public class Time {
 	public void handle(HttpExchange c) throws IOException {
 
             String finalResponseText = responseText;
-	    // if given response is empty, then simply send epoch time
-	    if (finalResponseText == "") {
-		finalResponseText = Long.toString( java.time.Instant.now().getEpochSecond() ) + " <-\n";
+	    // if given response is one of the following, then send special response
+	    switch(finalResponseText) {
+		case "now":
+		    finalResponseText = java.time.Instant.now().toString();
+		break;
+		case "epoch":
+		    finalResponseText = Long.toString( java.time.Instant.now().getEpochSecond() );
+		break;
+		case "FAKETIME":
+		    finalResponseText = System.getenv("FAKETIME");
+		break;
+		case "LD_PRELOAD":
+		    finalResponseText = System.getenv("LD_PRELOAD");
+		break;
 	    }
+
 	    // prepare and send http reponse
 	    c.sendResponseHeaders(200, finalResponseText.length());
 	    OutputStream rs = c.getResponseBody();
