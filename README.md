@@ -10,7 +10,7 @@ machine readable formats.
 The image uses _libfaketime_ to modify the system time inside the container. For testing purposes,
 it gets installed right away into the webapp image. _If you'd like to move any app or container
 in time in a kubernetes/openshift environment, without modification of the image, then feel free
-to contact me at sysals.it(at)gmail.com._
+to contact me at sydals.it(at)gmail.com._
 
 ## License
 This project is published under the Apache 2.0 License. See LICENSE file or details.
