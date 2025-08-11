@@ -139,9 +139,24 @@ public class Time {
 	String ISOdatestamp = ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT );
 	String responseContent = "";
 	switch (style) {
-	    case "json": responseContent += "{\n \"secondsSInce1970\": " + secondsSinceEpoch + ",\n  \"ISOdatestamp\": \"" + ISOdatestamp + "\"\n}\n"; break;
-	    case "yaml": responseContent += "---\nsecondsSInce1970: "    + secondsSinceEpoch + "\nISOdatestamp: "        + ISOdatestamp + "\n";    break;
-	    default:     responseContent += "secondsSInce1970="          + secondsSinceEpoch + "\nISOdatestamp="         + ISOdatestamp + "\n";
+	    case "json": responseContent += "{\n \"secondsSince1970\": " + secondsSinceEpoch
+					 +  ",\n  \"ISOdatestamp\": \""  + ISOdatestamp
+					 +  "\",\n  \"FAKETIME\": \""    + System.getenv("FAKETIME")
+					 +  "\",\n  \"LD_PRELOAD\": \""  + System.getenv("LD_PRELOAD")
+					 +  "\"\n}\n";
+			 break;
+	    case "yaml": responseContent += "---"
+					 +  "\nsecondsSince1970: "	+ secondsSinceEpoch
+					 +  "\nISOdatestamp: "		+ ISOdatestamp
+					 +  "\nFAKETIME: "    		+ System.getenv("FAKETIME")
+					 +  "\nLD_PRELOAD: "		+ System.getenv("LD_PRELOAD")
+					 +  "\n";
+			 break;
+	    default:     responseContent += "secondsSince1970="	+ secondsSinceEpoch
+					 +  "\nISOdatestamp="	+ ISOdatestamp
+					 +  "\nFAKETIME="	+ System.getenv("FAKETIME")
+					 +  "\nLD_PRELOAD="	+ System.getenv("LD_PRELOAD")
+					 +  "\n";
 	}
 	return responseContent;
     }
