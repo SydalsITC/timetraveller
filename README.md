@@ -55,8 +55,18 @@ easy or machine readable format. There's no fancy, shiny look, just timeless con
 * /diff/<numSeconds> shows the difference between the given number of seconds since 1970-01-01 as
   long int and the respective value inside the container. Means /diff/0 shows the time inside the
   container in seconds since Unix start.
-* Under /time you'll find the internal time in different formats, both as epoch and human readable:
+* Under /time you'll find the internal time in different formats, both as epoch and human readable, plus the content of the variables FAKETIME and LD_PRELOAD:
   * /time/text : in plain text, key=value format, like for Unix env=value.
   * /time/json : as json record
   * /time/yaml : as yaml document
+
+Example:
+```
+{
+  "epoch": 1755547987,
+  "now": "2025-08-18T20:13:07.081617691Z",
+  "FAKETIME": "+7d",
+  "LD_PRELOAD": "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1"
+}
+```
 

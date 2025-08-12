@@ -139,21 +139,21 @@ public class Time {
 	String ISOdatestamp = ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT );
 	String responseContent = "";
 	switch (style) {
-	    case "json": responseContent += "{\n \"secondsSince1970\": " + secondsSinceEpoch
-					 +  ",\n  \"ISOdatestamp\": \""  + ISOdatestamp
+	    case "json": responseContent += "{\n  \"epoch\": " + secondsSinceEpoch
+					 +  ",\n  \"now\": \""  + ISOdatestamp
 					 +  "\",\n  \"FAKETIME\": \""    + System.getenv("FAKETIME")
 					 +  "\",\n  \"LD_PRELOAD\": \""  + System.getenv("LD_PRELOAD")
 					 +  "\"\n}\n";
 			 break;
 	    case "yaml": responseContent += "---"
-					 +  "\nsecondsSince1970: "	+ secondsSinceEpoch
-					 +  "\nISOdatestamp: "		+ ISOdatestamp
+					 +  "\nepoch: "	+ secondsSinceEpoch
+					 +  "\nnow: "		+ ISOdatestamp
 					 +  "\nFAKETIME: "    		+ System.getenv("FAKETIME")
 					 +  "\nLD_PRELOAD: "		+ System.getenv("LD_PRELOAD")
 					 +  "\n";
 			 break;
-	    default:     responseContent += "secondsSince1970="	+ secondsSinceEpoch
-					 +  "\nISOdatestamp="	+ ISOdatestamp
+	    default:     responseContent += "epoch="	+ secondsSinceEpoch
+					 +  "\nnow="	+ ISOdatestamp
 					 +  "\nFAKETIME="	+ System.getenv("FAKETIME")
 					 +  "\nLD_PRELOAD="	+ System.getenv("LD_PRELOAD")
 					 +  "\n";
