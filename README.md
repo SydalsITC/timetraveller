@@ -16,11 +16,11 @@ to contact me at sydals.itc(at)gmail.com._
 This project is published under the Apache 2.0 License. See LICENSE file or details.
 
 ## Build
-The system that was given us contained bo development tools and no root access was given, 
+The system that was given us contained no development tools and no root access was given, 
 so it wasn't possible to install a jdk. But we had the opportunity to use docker and with that
-to build us an image that fitted our needs.
+to build an image that fitted our needs.
 
-The src folder gets mounted into the container and afterwards contains the compiled class files.
+The src folder gets mounted into the container with the jdk and afterwards contains the compiled class files.
 ```
 docker build -t javabuilder:1.0 -f Dockerfile.builder .
 docker run --rm -it -v ./src:/code:Z javabuilder:1.0 javac Time.java
@@ -59,6 +59,7 @@ easy or machine readable format. There's no fancy, shiny look, just timeless con
   * /time/text : in plain text, key=value format, like for Unix env=value.
   * /time/json : as json record
   * /time/yaml : as yaml document
+  * /time/csv  : as csv file with column headers in line 1
 
 Example:
 ```

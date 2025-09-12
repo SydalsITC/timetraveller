@@ -139,21 +139,32 @@ public class Time {
 	String ISOdatestamp = ZonedDateTime.now( ZoneOffset.UTC ).format( DateTimeFormatter.ISO_INSTANT );
 	String responseContent = "";
 	switch (style) {
-	    case "json": responseContent += "{\n  \"epoch\": " + secondsSinceEpoch
-					 +  ",\n  \"now\": \""  + ISOdatestamp
-					 +  "\",\n  \"FAKETIME\": \""    + System.getenv("FAKETIME")
-					 +  "\",\n  \"LD_PRELOAD\": \""  + System.getenv("LD_PRELOAD")
+
+	    case "json": responseContent += "{\n  \"epoch\": " 		+ secondsSinceEpoch
+					 +  ",\n  \"now\": \""		+ ISOdatestamp
+					 +  "\",\n  \"FAKETIME\": \""   + System.getenv("FAKETIME")
+					 +  "\",\n  \"LD_PRELOAD\": \"" + System.getenv("LD_PRELOAD")
 					 +  "\"\n}\n";
 			 break;
+
 	    case "yaml": responseContent += "---"
-					 +  "\nepoch: "	+ secondsSinceEpoch
+					 +  "\nepoch: "		+ secondsSinceEpoch
 					 +  "\nnow: "		+ ISOdatestamp
-					 +  "\nFAKETIME: "    		+ System.getenv("FAKETIME")
-					 +  "\nLD_PRELOAD: "		+ System.getenv("LD_PRELOAD")
+					 +  "\nFAKETIME: "    	+ System.getenv("FAKETIME")
+					 +  "\nLD_PRELOAD: "	+ System.getenv("LD_PRELOAD")
 					 +  "\n";
 			 break;
-	    default:     responseContent += "epoch="	+ secondsSinceEpoch
-					 +  "\nnow="	+ ISOdatestamp
+
+	    case "csv" : responseContent += "epoch,now,FAKETIME,LD_PRELOAD"
+					 +  "\n"		+ secondsSinceEpoch
+					 +  ","			+ ISOdatestamp
+					 +  ","			+ System.getenv("FAKETIME")
+					 +  ","			+ System.getenv("LD_PRELOAD")
+					 +  "\n";
+			 break;
+
+	    default:     responseContent += "epoch="		+ secondsSinceEpoch
+					 +  "\nnow="		+ ISOdatestamp
 					 +  "\nFAKETIME="	+ System.getenv("FAKETIME")
 					 +  "\nLD_PRELOAD="	+ System.getenv("LD_PRELOAD")
 					 +  "\n";
@@ -183,6 +194,7 @@ public class Time {
 		switch (style) {
 		    case "json": cType = "application/json";    break;
 		    case "yaml": cType = "application/x-yaml";  break;
+		    case "csv" : cType = "text/csv";  		break;
 		}
 	    }
 
