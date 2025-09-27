@@ -51,6 +51,7 @@ easy or machine readable format. There's no fancy, shiny look, just timeless con
 * /about - shows some brief information about the webapp.
 * /now - displays the time inside the container in human readable format; basically, it's just the result of _Instant.now()_, e.g. 2025-09-20T04:06:22.035107349Z.
 * /epoch - the same, as seconds since 1970-01-01.
+* /uptime shows the uptime of the container/pod in seconds.
 * /FAKETIME and /LD_PRELOAD show the content of the respective environment variable.
 * /diff/<numSeconds> shows the difference between the given number of seconds since 1970-01-01 as
   long int and the respective value inside the container. Means /diff/0 shows the time inside the
@@ -64,8 +65,9 @@ easy or machine readable format. There's no fancy, shiny look, just timeless con
 Example:
 ```
 {
-  "epoch": 1755547987,
-  "now": "2025-08-18T20:13:07.081617691Z",
+  "uptime": 214,
+  "epoch": 1759616006,
+  "now": "2025-10-04T22:13:26.474068134Z",
   "FAKETIME": "+7d",
   "LD_PRELOAD": "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1"
 }
