@@ -28,14 +28,14 @@ docker run --rm -it -v ./src:/code:Z javabuilder:1.0 javac Time.java
 
 Next step was to build the webapp container, based on a recent Ubuntu image and the OpenJDK runtime.
 ```
-docker build -t timetravellerapp:1.0 -f Dockerfile.webapp .
+docker build -t sydalsitc/timetraveller:1.0 -f Dockerfile.webapp .
 ```
 
 ## Run
 A simple test run shows a webserver on http://localhost:8080/ where the app displays the time inside
 the container:
 ```
-docker run --rm -it -p 8080:8080 timetravellerapp:1.0
+docker run --rm -itd --name drwho -p 8080:8080 sydalsitc/timetravellerapp:1.0
 ```
 
 There's a docker-compose.yml, too, for easy start and daemonizing:
