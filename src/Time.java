@@ -21,6 +21,10 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneOffset;
 
+// for retrieving uptime:
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+
 /*
  * ==== code =============================
  */
@@ -29,7 +33,12 @@ public class Time {
 
     static String headText  = "<html><head><style>body{font-family: Arial, sans-serif;}</style></head><body>\n<h1>timetraveller app</h1>\n";
     static String rootText  = headText + "<p>For more information, please read <a href='/about'>/about</a>.</p></body></html>\n";
-    static String aboutText = headText + "<p>This is a simple web server that's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n<ul>\n  <li/>It shows the current time as text at <a href='/now'>/now</a> and as seconds since 1970 at <a href='/epoch'>/epoch</a>.\n  <li/>On /diff/<i>yourTimeInSecondsSince1970</i> you'll find the difference between given and internal time.\n  <li/>Find more output under /time/xxx in different formats; see Readme.md for details.\n  <li/>At <a href='/FAKETIME'>/FAKETIME</a> and <a href='/LD_PRELOAD'>/LD_PRELOAD</a> it displays the content of the respective environment variable.\n</ul>\n</body></html>\n";
+    static String aboutText = headText + "<p>This is a simple web server that's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n<ul>\n  <li/>It shows the current time as text at <a href='/now'>/now</a> and as seconds since 1970 at <a href='/epoch'>/epoch</a>.\n  <li/><a href='/uptime'>/uptime</a> shows the uptime of the system/pod in seconds.\n  <li/>On /diff/<i>yourTimeInSecondsSince1970</i> you'll find the difference between given and internal time.\n  <li/>Find more output under /time/xxx in different formats; see Readme.md for details.\n  <li/>At <a href='/FAKETIME'>/FAKETIME</a> and <a href='/LD_PRELOAD'>/LD_PRELOAD</a> it displays the content of the respective environment variable.\n</ul>\n</body></html>\n";
+
+    static String getUptime(){
+	RuntimeMXBean rmxBean = ManagementFactory.getRuntimeMXBean();
+	return Long.toString(rmxBean.getUptime()/1000);
+    }
 
     // main class
     public static void main(String[] args) throws Exception {
@@ -39,6 +48,7 @@ public class Time {
         timeSrv.createContext("/about",      new textHandler(aboutText) );
         timeSrv.createContext("/now",        new textHandler("now") );
         timeSrv.createContext("/epoch",      new textHandler("epoch") );
+        timeSrv.createContext("/uptime",     new textHandler("uptime") );
         timeSrv.createContext("/FAKETIME",   new textHandler("FAKETIME") );
         timeSrv.createContext("/LD_PRELOAD", new textHandler("LD_PRELOAD") );
         timeSrv.createContext("/diff",       new diffHandler() );
@@ -70,15 +80,23 @@ public class Time {
             String finalResponseText = responseText;
 	    // if given response is one of the following, then send special response
 	    switch(finalResponseText) {
+
 		case "now":
 		    finalResponseText = java.time.Instant.now().toString();
 		break;
+
 		case "epoch":
 		    finalResponseText = Long.toString( java.time.Instant.now().getEpochSecond() );
 		break;
+
+		case "uptime":
+		    finalResponseText = getUptime();
+		break;
+
 		case "FAKETIME":
 		    finalResponseText = System.getenv("FAKETIME");
 		break;
+
 		case "LD_PRELOAD":
 		    finalResponseText = System.getenv("LD_PRELOAD");
 		break;
@@ -140,7 +158,8 @@ public class Time {
 	String responseContent = "";
 	switch (style) {
 
-	    case "json": responseContent += "{\n  \"epoch\": " 		+ secondsSinceEpoch
+	    case "json": responseContent += "{\n  \"uptime\": "		+ getUptime()
+					 +  ",\n  \"epoch\": " 		+ secondsSinceEpoch
 					 +  ",\n  \"now\": \""		+ ISOdatestamp
 					 +  "\",\n  \"FAKETIME\": \""   + System.getenv("FAKETIME")
 					 +  "\",\n  \"LD_PRELOAD\": \"" + System.getenv("LD_PRELOAD")
@@ -148,6 +167,7 @@ public class Time {
 			 break;
 
 	    case "yaml": responseContent += "---"
+					 +  "\nuptime: "	+ getUptime()
 					 +  "\nepoch: "		+ secondsSinceEpoch
 					 +  "\nnow: "		+ ISOdatestamp
 					 +  "\nFAKETIME: "    	+ System.getenv("FAKETIME")
@@ -155,15 +175,17 @@ public class Time {
 					 +  "\n";
 			 break;
 
-	    case "csv" : responseContent += "epoch,now,FAKETIME,LD_PRELOAD"
-					 +  "\n"		+ secondsSinceEpoch
+	    case "csv" : responseContent += "uptime,epoch,now,FAKETIME,LD_PRELOAD"
+					 +  "\n"		+ getUptime()
+					 +  ","			+ secondsSinceEpoch
 					 +  ","			+ ISOdatestamp
 					 +  ","			+ System.getenv("FAKETIME")
 					 +  ","			+ System.getenv("LD_PRELOAD")
 					 +  "\n";
 			 break;
 
-	    default:     responseContent += "epoch="		+ secondsSinceEpoch
+	    default:     responseContent += "uptime="		+ getUptime()
+					 +  "\nepoch="		+ ISOdatestamp
 					 +  "\nnow="		+ ISOdatestamp
 					 +  "\nFAKETIME="	+ System.getenv("FAKETIME")
 					 +  "\nLD_PRELOAD="	+ System.getenv("LD_PRELOAD")
