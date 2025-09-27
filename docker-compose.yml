@@ -2,7 +2,7 @@ version: '3'
 
 services:
   timetraveller:
-    image: timetravellerapp:1.0
+    image: sydalsitc/timetraveller:1.0
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -10,5 +10,4 @@ services:
     environment:
       FAKETIME: "+1001h"
       LD_PRELOAD: "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1"
-
 

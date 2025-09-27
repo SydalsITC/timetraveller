@@ -5,7 +5,7 @@ BUILDRIMG=javabuilder
 BUILDRTAG=1.0
 BUILDRFIL=Dockerfile.builder
 
-WEBAPPIMG=timetravellerapp
+WEBAPPIMG=sydalsitc/timetraveller
 WEBAPPTAG=1.0
 WEBAPPFIL=Dockerfile.webapp
 
