@@ -12,6 +12,7 @@ import java.net.InetSocketAddress;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -33,7 +34,9 @@ public class Time {
 
     static String headText  = "<html><head><style>body{font-family: Arial, sans-serif;}</style></head><body>\n<h1>timetraveller app</h1>\n";
     static String rootText  = headText + "<p>For more information, please read <a href='/about'>/about</a>.</p></body></html>\n";
-    static String aboutText = headText + "<p>This is a simple web server that's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n<ul>\n  <li/>It shows the current time as text at <a href='/now'>/now</a> and as seconds since 1970 at <a href='/epoch'>/epoch</a>.\n  <li/><a href='/uptime'>/uptime</a> shows the uptime of the system/pod in seconds.\n  <li/>On /diff/<i>yourTimeInSecondsSince1970</i> you'll find the difference between given and internal time.\n  <li/>Find more output under /time/xxx in different formats; see Readme.md for details.\n  <li/>At <a href='/FAKETIME'>/FAKETIME</a> and <a href='/LD_PRELOAD'>/LD_PRELOAD</a> it displays the content of the respective environment variable.\n</ul>\n</body></html>\n";
+    static String aboutText = headText + "<p>This is a simple web server that's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n<ul>\n  <li/>It shows the current time as text at <a href='/now'>/now</a> and as seconds since 1970 at <a href='/epoch'>/epoch</a>.\n  <li/><a href='/uptime'>/uptime</a> shows the uptime of the system/pod in seconds.\n  <li/>On /diff/<i>yourTimeInSecondsSince1970</i> you'll find the difference between given and internal time.\n  <li/>Find more output under /time/xxx in different formats (e.g. <a href='/time/json'>/time/json</a>); see Readme.md for details.\n  <li/>At <a href='/env/FAKETIME'>/env/FAKETIME</a> and <a href='/env/LD_PRELOAD'>/env/LD_PRELOAD</a> it displays the content of the respective environment variable.\n</ul>\n</body></html>\n";
+
+    public static List<String> validEnvVars = List.of( "FAKETIME", "LD_PRELOAD" );
 
     static String getUptime(){
 	RuntimeMXBean rmxBean = ManagementFactory.getRuntimeMXBean();
@@ -42,6 +45,7 @@ public class Time {
 
     // main class
     public static void main(String[] args) throws Exception {
+
         HttpServer timeSrv = HttpServer.create(new InetSocketAddress(8080), 0);
 
         timeSrv.createContext("/",           new textHandler(rootText)  );
@@ -49,8 +53,7 @@ public class Time {
         timeSrv.createContext("/now",        new textHandler("now") );
         timeSrv.createContext("/epoch",      new textHandler("epoch") );
         timeSrv.createContext("/uptime",     new textHandler("uptime") );
-        timeSrv.createContext("/FAKETIME",   new textHandler("FAKETIME") );
-        timeSrv.createContext("/LD_PRELOAD", new textHandler("LD_PRELOAD") );
+	timeSrv.createContext("/env",        new envHandler()  );
         timeSrv.createContext("/diff",       new diffHandler() );
         timeSrv.createContext("/time",       new timeHandler() );
 
@@ -58,6 +61,44 @@ public class Time {
         timeSrv.start();
     }
 
+    /*
+     * handler to send content of requested env variable
+     */
+    static class envHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange c) throws IOException {
+
+	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
+	    String  pathCalled = c.getRequestURI().getPath();
+	    String[] pathArray = pathCalled.split("[/]");
+
+	    // default format is plain text
+	    String cType  = "text/plain";
+	    String responseText = "";
+	    int    responseCode = 200;
+
+	    // set correct content type
+	    if (pathArray.length == 3) {
+		String envVar = pathArray[2];
+		if (validEnvVars.contains(envVar)) {
+		    responseText = System.getenv(envVar);
+		} else {
+		    responseText = "403/Forbidden";
+		    responseCode = 403;
+		}
+	    } else {
+		responseText = "404/Not found";
+		responseCode = 404;
+	    }
+
+	    // send content and close request
+	    c.getResponseHeaders().set("Content-Type", cType);
+            c.sendResponseHeaders(responseCode, responseText.length());
+            OutputStream rs = c.getResponseBody();
+            rs.write(responseText.getBytes());
+            rs.close();
+	}
+    }
 
     /*
      *  handler to send a simple text
@@ -91,14 +132,6 @@ public class Time {
 
 		case "uptime":
 		    finalResponseText = getUptime();
-		break;
-
-		case "FAKETIME":
-		    finalResponseText = System.getenv("FAKETIME");
-		break;
-
-		case "LD_PRELOAD":
-		    finalResponseText = System.getenv("LD_PRELOAD");
 		break;
 	    }
 

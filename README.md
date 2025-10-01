@@ -52,7 +52,7 @@ easy or machine readable format. There's no fancy, shiny look, just timeless con
 * /now - displays the time inside the container in human readable format; basically, it's just the result of _Instant.now()_, e.g. 2025-09-20T04:06:22.035107349Z.
 * /epoch - the same, as seconds since 1970-01-01.
 * /uptime shows the uptime of the container/pod in seconds.
-* /FAKETIME and /LD_PRELOAD show the content of the respective environment variable.
+* /env/FAKETIME and /env/LD_PRELOAD show the content of the respective environment variable.
 * /diff/<numSeconds> shows the difference between the given number of seconds since 1970-01-01 as
   long int and the respective value inside the container. Means /diff/0 shows the time inside the
   container in seconds since Unix start.
