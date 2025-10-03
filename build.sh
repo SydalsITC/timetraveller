@@ -1,12 +1,14 @@
 #!/bin/bash
 
+IMGTAG=${1:-nightly}
+
 # definitions for images
 BUILDRIMG=javabuilder
 BUILDRTAG=1.0
 BUILDRFIL=Dockerfile.builder
 
 WEBAPPIMG=sydalsitc/timetraveller
-WEBAPPTAG=1.0
+WEBAPPTAG=${IMGTAG}
 WEBAPPFIL=Dockerfile.webapp
 
 # time or offset for libfaketime
