@@ -43,9 +43,6 @@ public class Time {
      **
      **/
 
-    static String headText  = "<html><head><link rel='stylesheet' href='/static/styles.css'></head><body>\n<h1>timetraveller app</h1>\n";
-    static String rootText  = headText + "<p>For more information, please read <a href='/static/about.html'>/static/about.html</a>.</p></body></html>\n";
-
     public static List<String> validEnvVars = List.of( "FAKETIME", "LD_PRELOAD" );
     public static String     staticFilePath = "static/";
 
@@ -79,10 +76,12 @@ public class Time {
 
         HttpServer timeSrv = HttpServer.create(new InetSocketAddress(8080), 0);
 
-        timeSrv.createContext("/",           new textHandler(rootText)  );
+        timeSrv.createContext("/",           new rootHandler() );
+
         timeSrv.createContext("/now",        new textHandler("now") );
         timeSrv.createContext("/epoch",      new textHandler("epoch") );
         timeSrv.createContext("/uptime",     new textHandler("uptime") );
+
         timeSrv.createContext("/env",        new envHandler()  );
         timeSrv.createContext("/diff",       new diffHandler() );
         timeSrv.createContext("/time",       new timeHandler() );
@@ -127,7 +126,29 @@ public class Time {
 	return responseText;
     }
 
+    static void sendTextFileContent(HttpExchange c, String fileName) throws IOException {
+	String responseText = readTextFile(fileName);
+	String contentType  = "text/plain";
+        int    responseCode = 500;
 
+	if (responseText == null){
+	    responseText = "500 - file i/o error";
+	} else {
+	    contentType  = getContentType(fileName);
+	    responseCode = 200;
+	}
+	sendTextContent(c, responseText, contentType, responseCode);
+    }
+
+    /*
+     * handler to send content of requested env variable
+     */
+    static class rootHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange c) throws IOException {
+	    sendTextFileContent(c, "root.html");
+	}
+    }
     /*
      * handler to send content of requested env variable
      */
@@ -147,18 +168,12 @@ public class Time {
 	    // set correct content type
 	    if (pathArray.length == 3) {			// MUST be 3 exactly in plain "/static/file" model
 		String fileName = pathArray[2];
-		responseText = readTextFile(fileName);		// [1] = context (static), [2] = filename
-		if (responseText != null){
-		    contentType  = getContentType(fileName);
-		} else {
-		    responseText = "500 - file i/o error";
-		    responseCode = 500;
-		}
+		sendTextFileContent(c, fileName);
 	    } else {
 		responseText = "404 - file not found";		// else deny f.r.o.s
 		responseCode = 404;
+		sendTextContent(c, responseText, contentType, responseCode);
 	    }
-	    sendTextContent(c, responseText, contentType, responseCode);
 	}
 
     } //- end(staticFileHandler)
