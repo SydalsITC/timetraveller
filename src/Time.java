@@ -26,21 +26,52 @@ import java.time.ZoneOffset;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
+// file i/o
+import java.io.BufferedReader;
+import java.io.FileReader;
+
+
 /*
  * ==== code =============================
  */
 
 public class Time {
 
-    static String headText  = "<html><head><style>body{font-family: Arial, sans-serif;}</style></head><body>\n<h1>timetraveller app</h1>\n";
-    static String rootText  = headText + "<p>For more information, please read <a href='/about'>/about</a>.</p></body></html>\n";
-    static String aboutText = headText + "<p>This is a simple web server that's intended to be used as test object when shifting kubernetes/openshift containers in time.</p>\n<ul>\n  <li/>It shows the current time as text at <a href='/now'>/now</a> and as seconds since 1970 at <a href='/epoch'>/epoch</a>.\n  <li/><a href='/uptime'>/uptime</a> shows the uptime of the system/pod in seconds.\n  <li/>On /diff/<i>yourTimeInSecondsSince1970</i> you'll find the difference between given and internal time.\n  <li/>Find more output under /time/xxx in different formats (e.g. <a href='/time/json'>/time/json</a>); see Readme.md for details.\n  <li/>At <a href='/env/FAKETIME'>/env/FAKETIME</a> and <a href='/env/LD_PRELOAD'>/env/LD_PRELOAD</a> it displays the content of the respective environment variable.\n</ul>\n</body></html>\n";
+    /*****************************************************
+     **
+     **  definitions
+     **
+     **/
+
+    static String headText  = "<html><head><link rel='stylesheet' href='/static/styles.css'></head><body>\n<h1>timetraveller app</h1>\n";
+    static String rootText  = headText + "<p>For more information, please read <a href='/static/about.html'>/static/about.html</a>.</p></body></html>\n";
 
     public static List<String> validEnvVars = List.of( "FAKETIME", "LD_PRELOAD" );
+    public static String     staticFilePath = "static/";
+
+    /******************************************************
+     **
+     **  auxiliary functions
+     **
+     **/
+
 
     static String getUptime(){
 	RuntimeMXBean rmxBean = ManagementFactory.getRuntimeMXBean();
 	return Long.toString(rmxBean.getUptime()/1000);
+    }
+
+    static String getContentType(String fileName){
+	String[] filenameSplit = fileName.split("[.]");
+	String fileType = filenameSplit[ filenameSplit.length-1 ];
+
+	String cType = "text/plain";	// default value
+	switch(fileType){
+	    case "html"  : cType = "text/html";		break;
+	    case "css"   : cType = "text/css";		break;
+	    case "js"    : cType = "text/js";		break;
+	}
+	return cType;
     }
 
     // main class
@@ -49,17 +80,89 @@ public class Time {
         HttpServer timeSrv = HttpServer.create(new InetSocketAddress(8080), 0);
 
         timeSrv.createContext("/",           new textHandler(rootText)  );
-        timeSrv.createContext("/about",      new textHandler(aboutText) );
         timeSrv.createContext("/now",        new textHandler("now") );
         timeSrv.createContext("/epoch",      new textHandler("epoch") );
         timeSrv.createContext("/uptime",     new textHandler("uptime") );
         timeSrv.createContext("/env",        new envHandler()  );
         timeSrv.createContext("/diff",       new diffHandler() );
         timeSrv.createContext("/time",       new timeHandler() );
+        timeSrv.createContext("/static/",    new staticFileHandler() );
 
         timeSrv.setExecutor(null); // creates a default executor
         timeSrv.start();
     }
+
+    /**************************************************************************************
+     **
+     **  file handling section
+     **
+     **/
+
+    static void sendTextContent(HttpExchange c, String content, String cType, int responseCode) throws IOException {
+	// send content and close request
+	c.getResponseHeaders().set("Content-Type", cType);
+	c.sendResponseHeaders(responseCode, content.length());
+	OutputStream rs = c.getResponseBody();
+	rs.write(content.getBytes());
+	rs.close();
+    }
+
+    static String readTextFile(String fileName){
+	String responseText = "";
+
+	try (BufferedReader br = new BufferedReader(new FileReader(staticFilePath + fileName))) {
+	    StringBuilder   sb = new StringBuilder();
+	    String    textLine = br.readLine();
+
+	    while (textLine != null) {
+	        sb.append(textLine);
+	        sb.append(System.lineSeparator());
+	        textLine = br.readLine();
+	    }
+	    responseText = sb.toString();
+
+        } catch (IOException e) {
+	    responseText = null;
+	}
+	return responseText;
+    }
+
+
+    /*
+     * handler to send content of requested env variable
+     */
+    static class staticFileHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange c) throws IOException {
+
+	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
+	    String   pathCalled = c.getRequestURI().getPath();
+	    String[] pathArray  = pathCalled.split("[/]");
+
+	    // default format is plain text
+	    String contentType  = "text/plain";
+	    String responseText = "";
+	    int    responseCode = 200;
+
+	    // set correct content type
+	    if (pathArray.length == 3) {			// MUST be 3 exactly in plain "/static/file" model
+		String fileName = pathArray[2];
+		responseText = readTextFile(fileName);		// [1] = context (static), [2] = filename
+		if (responseText != null){
+		    contentType  = getContentType(fileName);
+		} else {
+		    responseText = "500 - file i/o error";
+		    responseCode = 500;
+		}
+	    } else {
+		responseText = "404 - file not found";		// else deny f.r.o.s
+		responseCode = 404;
+	    }
+	    sendTextContent(c, responseText, contentType, responseCode);
+	}
+
+    } //- end(staticFileHandler)
+
 
     /*
      * handler to send content of requested env variable

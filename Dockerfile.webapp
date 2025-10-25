@@ -11,9 +11,7 @@ RUN DEBIAN_FRONTEND=noninteractive  apt-get -y install default-jre libfaketime
 RUN mkdir /app
 WORKDIR   /app
 COPY ./src/*.class /app
+COPY ./static      /app/static
 
 ENTRYPOINT ["java", "Time"]
-
-
-
 
