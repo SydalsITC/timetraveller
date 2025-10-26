@@ -42,8 +42,31 @@ public class Time {
      **
      **/
 
+    // list of environment variables which may be processed by the envHandler()
     public static List<String> validEnvVars = List.of( "FAKETIME", "LD_PRELOAD" );
-    public static String     staticFilePath = "static/";
+
+    // path to the static text files
+    public static String staticFilePath = "static/";
+
+
+    // main class
+    public static void main(String[] args) throws Exception {
+
+        HttpServer timeSrv = HttpServer.create(new InetSocketAddress(8080), 0);
+
+        timeSrv.createContext("/",           new rootHandler() );
+        timeSrv.createContext("/text/",	     new textHandler() );
+
+        timeSrv.createContext("/env",        new envHandler()  );
+        timeSrv.createContext("/diff",       new diffHandler() );
+
+        timeSrv.createContext("/time",       new timeHandler() );
+        timeSrv.createContext("/static/",    new staticFileHandler() );
+
+        timeSrv.setExecutor(null); // creates a default executor
+        timeSrv.start();
+    }
+
 
     /******************************************************
      **
@@ -51,15 +74,20 @@ public class Time {
      **
      **/
 
-
+    //"""""""""""""""""""""""""""""""""""""""""""""""""
+    // get the uptime of the system/pods
+    //
     static String getUptime(){
 	RuntimeMXBean rmxBean = ManagementFactory.getRuntimeMXBean();
 	return Long.toString(rmxBean.getUptime()/1000);
     }
 
+    //""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    // determine content type from file.suffix
+    //
     static String getContentType(String fileName){
 	String[] filenameSplit = fileName.split("[.]");
-	String fileType = filenameSplit[ filenameSplit.length-1 ];
+	String   fileType = filenameSplit[ filenameSplit.length-1 ];
 
 	String cType = "text/plain";	// default value
 	switch(fileType){
@@ -70,32 +98,24 @@ public class Time {
 	return cType;
     }
 
-    // main class
-    public static void main(String[] args) throws Exception {
+    //"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    //  get parameter from "/context/parameter"
+    //
+    static String parmFromPathCalled(HttpExchange c){
+	// get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
+	String  pathCalled = c.getRequestURI().getPath();
+	String[] pathArray = pathCalled.split("[/]");
+	String   parameter = null;
 
-        HttpServer timeSrv = HttpServer.create(new InetSocketAddress(8080), 0);
-
-        timeSrv.createContext("/",           new rootHandler() );
-
-        timeSrv.createContext("/now",        new textHandler("now") );
-        timeSrv.createContext("/epoch",      new textHandler("epoch") );
-        timeSrv.createContext("/uptime",     new textHandler("uptime") );
-
-        timeSrv.createContext("/env",        new envHandler()  );
-        timeSrv.createContext("/diff",       new diffHandler() );
-        timeSrv.createContext("/time",       new timeHandler() );
-        timeSrv.createContext("/static/",    new staticFileHandler() );
-
-        timeSrv.setExecutor(null); // creates a default executor
-        timeSrv.start();
+	if (pathArray.length == 3) {			// MUST be 3 exactly in plain "/static/file" model
+	    parameter = pathArray[2];
+	}
+	return parameter;
     }
 
-    /**************************************************************************************
-     **
-     **  file handling section
-     **
-     **/
-
+    //"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    //  send text content to client
+    //
     static void sendTextContent(HttpExchange c, String content, String cType, int responseCode) throws IOException {
 	// send content and close request
 	c.getResponseHeaders().set("Content-Type", cType);
@@ -104,6 +124,13 @@ public class Time {
 	rs.write(content.getBytes());
 	rs.close();
     }
+
+
+    /**************************************************************************************
+     **
+     **  file handling section
+     **
+     **/
 
     static String readTextFile(String fileName){
 	String responseText = "";
@@ -218,45 +245,41 @@ public class Time {
     }
 
     /*
-     *  handler to send a simple text
-     *  - parameter: text to send as reponse
-     *  - if text is empty string, then send current time as seconds since UNIX epoch
+     *  handler to send a simple text, based on text parameter
      */
     static class textHandler implements HttpHandler {
-
-	// save given reponse text in own variable
-	private String responseText;
-
-	// define custom handler to be able to receive string parameter
-	public  textHandler(String responseText) {
-	    this.responseText = responseText;
-	}
-
         @Override
 	public void handle(HttpExchange c) throws IOException {
 
-            String finalResponseText = responseText;
-	    // if given response is one of the following, then send special response
-	    switch(finalResponseText) {
+	    String parameterTxt = parmFromPathCalled(c); // get parameter from called path
+	    if (parameterTxt == null) {   // if null, define unsused parameter
+		parameterTxt = "send404"; // which is catched by the default later
+	    }
+
+	    int    responseCode = 200;	// det soem defaults
+            String responseText = "";
+	    String contentType  = "text/plain";
+
+	    // if given parameter is one of the following, then send special response
+	    switch(parameterTxt) {
 
 		case "now":
-		    finalResponseText = java.time.Instant.now().toString();
+		    responseText = java.time.Instant.now().toString();
 		break;
 
 		case "epoch":
-		    finalResponseText = Long.toString( java.time.Instant.now().getEpochSecond() );
+		    responseText = Long.toString( java.time.Instant.now().getEpochSecond() );
 		break;
 
 		case "uptime":
-		    finalResponseText = getUptime();
+		    responseText = getUptime();
 		break;
-	    }
 
-	    // prepare and send http reponse
-	    c.sendResponseHeaders(200, finalResponseText.length());
-	    OutputStream rs = c.getResponseBody();
-	    rs.write(finalResponseText.getBytes());
-	    rs.close();
+		default:
+		    responseText = "404 - not found";
+		    responseCode = 404;
+	    }
+	    sendTextContent(c, responseText, contentType, responseCode);
 	}
     }
 
