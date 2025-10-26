@@ -275,6 +275,10 @@ public class Time {
 		    responseText = getUptime();
 		break;
 
+		case "java.version":
+		    responseText = System.getProperty("java.version");
+		break;
+
 		default:
 		    responseText = "404 - not found";
 		    responseCode = 404;
