@@ -2,9 +2,8 @@
  *
  *  Time.java - simple web server for displaying system time
  *
- *  Time.java is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License v3 as published by the
- *  Free Software Foundation. For more details see the file LICENSE.
+ *  This software is distributed under the Apache 2.0 license.
+ *  For more details see the file LICENSE.
  *
  */
 
