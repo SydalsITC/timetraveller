@@ -60,7 +60,7 @@ public class Time {
         timeSrv.createContext("/env",        new envHandler()  );
         timeSrv.createContext("/diff",       new diffHandler() );
 
-        timeSrv.createContext("/data",       new timeHandler() );
+        timeSrv.createContext("/data",       new dataHandler() );
         timeSrv.createContext("/static/",    new staticFileHandler() );
 
         timeSrv.setExecutor(null); // creates a default executor
