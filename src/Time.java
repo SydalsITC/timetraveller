@@ -162,7 +162,7 @@ public class Time {
         int    responseCode = 404;
 
 	if (responseText == null){
-	    responseText = "404 - file not found";
+	    responseText = msg_404_NotFound;
 	} else {
 	    contentType  = getContentType(fileName);
 	    responseCode = 200;
@@ -190,7 +190,7 @@ public class Time {
 
 	    // default format is plain text
 	    String contentType  = "text/plain";
-	    String responseText = "404 - file not found";
+	    String responseText = msg_404_NotFound;
 	    int    responseCode = 404;
 
 	    String fileName = parmFromPathCalled(c);
