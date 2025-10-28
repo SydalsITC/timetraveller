@@ -107,7 +107,7 @@ public class Time {
 	String[] pathArray = pathCalled.split("[/]");
 	String   parameter = null;
 
-	if (pathArray.length == 3) {			// MUST be 3 exactly in plain "/static/file" model
+	if (pathArray.length == 3) {	// MUST be 3 exactly in plain "/context/parameter" model
 	    parameter = pathArray[2];
 	}
 	return parameter;
@@ -155,10 +155,10 @@ public class Time {
     static void sendTextFileContent(HttpExchange c, String fileName) throws IOException {
 	String responseText = readTextFile(fileName);
 	String contentType  = "text/plain";
-        int    responseCode = 500;
+        int    responseCode = 404;
 
 	if (responseText == null){
-	    responseText = "500 - file i/o error";
+	    responseText = "404 - file not found";
 	} else {
 	    contentType  = getContentType(fileName);
 	    responseCode = 200;
@@ -184,22 +184,19 @@ public class Time {
         @Override
         public void handle(HttpExchange c) throws IOException {
 
-	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
-	    String   pathCalled = c.getRequestURI().getPath();
-	    String[] pathArray  = pathCalled.split("[/]");
-
 	    // default format is plain text
 	    String contentType  = "text/plain";
-	    String responseText = "";
-	    int    responseCode = 200;
+	    String responseText = "404 - file not found";
+	    int    responseCode = 404;
 
-	    // set correct content type
-	    if (pathArray.length == 3) {			// MUST be 3 exactly in plain "/static/file" model
-		String fileName = pathArray[2];
+	    String fileName = parmFromPathCalled(c);
+	    if (fileName != null) {
+		// send file's content
+		responseCode = 200;
+		contentType  = getContentType(fileName);
 		sendTextFileContent(c, fileName);
 	    } else {
-		responseText = "404 - file not found";		// else deny f.r.o.s
-		responseCode = 404;
+		// else: deny (f.r.o.s)
 		sendTextContent(c, responseText, contentType, responseCode);
 	    }
 	}
