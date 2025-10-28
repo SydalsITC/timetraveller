@@ -60,7 +60,7 @@ public class Time {
         timeSrv.createContext("/env",        new envHandler()  );
         timeSrv.createContext("/diff",       new diffHandler() );
 
-        timeSrv.createContext("/time",       new timeHandler() );
+        timeSrv.createContext("/data",       new timeHandler() );
         timeSrv.createContext("/static/",    new staticFileHandler() );
 
         timeSrv.setExecutor(null); // creates a default executor
@@ -166,8 +166,9 @@ public class Time {
 	sendTextContent(c, responseText, contentType, responseCode);
     }
 
+
     /*
-     * handler to send content of requested env variable
+     * handler to send content on /
      */
     static class rootHandler implements HttpHandler {
         @Override
@@ -175,8 +176,9 @@ public class Time {
 	    sendTextFileContent(c, "root.html");
 	}
     }
+
     /*
-     * handler to send content of requested env variable
+     * handler to send content of requested text file
      */
     static class staticFileHandler implements HttpHandler {
         @Override
@@ -375,12 +377,12 @@ public class Time {
     /*
      * handler to print timestamp in different file formats (plain text, json, yaml)
      */
-    static class timeHandler implements HttpHandler {
+    static class dataHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange c) throws IOException {
 
 	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
-	    String pathCalled = c.getRequestURI().getPath();
+	    String   pathCalled = c.getRequestURI().getPath();
 	    String[] pathArray  = pathCalled.split("[/]");
 
 	    // default format is plain text
