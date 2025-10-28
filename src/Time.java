@@ -48,6 +48,10 @@ public class Time {
     // path to the static text files
     public static String staticFilePath = "static/";
 
+    // standard http error messages in short for plain text msg
+    static String msg_403_Forbidden = "403/forbidden";
+    static String msg_404_NotFound  = "404/not found";
+    static String msg_500_IntSrvErr = "500/internal server error";
 
     // main class
     public static void main(String[] args) throws Exception {
@@ -211,35 +215,25 @@ public class Time {
         @Override
         public void handle(HttpExchange c) throws IOException {
 
-	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
-	    String  pathCalled = c.getRequestURI().getPath();
-	    String[] pathArray = pathCalled.split("[/]");
-
 	    // default format is plain text
-	    String cType  = "text/plain";
+	    String contentType  = "text/plain";
 	    String responseText = "";
 	    int    responseCode = 200;
 
-	    // set correct content type
-	    if (pathArray.length == 3) {
-		String envVar = pathArray[2];
+            String envVar = parmFromPathCalled(c);
+
+	    if (envVar != null) {
 		if (validEnvVars.contains(envVar)) {
 		    responseText = System.getenv(envVar);
 		} else {
-		    responseText = "403/Forbidden";
+		    responseText = msg_403_Forbidden;
 		    responseCode = 403;
 		}
 	    } else {
-		responseText = "404/Not found";
+		responseText = msg_404_NotFound;
 		responseCode = 404;
 	    }
-
-	    // send content and close request
-	    c.getResponseHeaders().set("Content-Type", cType);
-            c.sendResponseHeaders(responseCode, responseText.length());
-            OutputStream rs = c.getResponseBody();
-            rs.write(responseText.getBytes());
-            rs.close();
+            sendTextContent(c, responseText, contentType, responseCode);
 	}
     }
 
