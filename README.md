@@ -56,11 +56,11 @@ easy or machine readable format. There's no fancy, shiny look, just timeless con
 * /diff/<numSeconds> shows the difference between the given number of seconds since 1970-01-01 as
   long int and the respective value inside the container. Means /diff/0 shows the time inside the
   container in seconds since Unix start.
-* Under /time you'll find the internal time in different formats, both as epoch and human readable, plus the content of the variables FAKETIME and LD_PRELOAD:
-  * /time/text : in plain text, key=value format, like for Unix env=value.
-  * /time/json : as json record
-  * /time/yaml : as yaml document
-  * /time/csv  : as csv file with column headers in line 1
+* Under /data you'll find the internal time in different formats, both as epoch and human readable, plus the content of the variables FAKETIME and LD_PRELOAD:
+  * /data/text : in plain text, key=value format, like for Unix env=value.
+  * /data/json : as json record
+  * /data/yaml : as yaml document
+  * /data/csv  : as csv file with column headers in line 1
 
 Example:
 ```
@@ -69,7 +69,7 @@ Example:
   "epoch": 1759616006,
   "now": "2025-10-04T22:13:26.474068134Z",
   "FAKETIME": "+7d",
-  "LD_PRELOAD": "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1"
+  "LD_PRELOAD": "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1",
+  "java/version": "20.0.8"
 }
 ```
-
