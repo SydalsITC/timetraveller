@@ -293,6 +293,8 @@ public class Time {
 	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
 	    String pathCalled   = c.getRequestURI().getPath();
 	    String[] pathArray  = pathCalled.split("[/]");
+            String contentType  = "text/plain";
+	    int    responseCode = 200;
 	    String responseText = "";
 
 	    // check if request is valid and if so, convert LongInt and calculate difference to now()
@@ -308,11 +310,7 @@ public class Time {
 	    }
 
 	    // send content and close request
-            c.sendResponseHeaders(200, responseText.length());
-            OutputStream rs = c.getResponseBody();
-            rs.write(responseText.getBytes());
-            rs.close();
-
+	    sendTextContent(c, responseText, contentType, responseCode);
        }
     }
 
@@ -377,16 +375,17 @@ public class Time {
 	    String[] pathArray  = pathCalled.split("[/]");
 
 	    // default format is plain text
-	    String style = "text";
-	    String cType = "text/plain";
+	    String style       = "text";
+	    int responseCode   = 200;
+	    String contentType = "text/plain";
 
 	    // set correct content type
 	    if (pathArray.length == 3) {
 		style = pathArray[2];
 		switch (style) {
-		    case "json": cType = "application/json";    break;
-		    case "yaml": cType = "application/x-yaml";  break;
-		    case "csv" : cType = "text/csv";  		break;
+		    case "json": contentType = "application/json";	break;
+		    case "yaml": contentType = "application/x-yaml";	break;
+		    case "csv" : contentType = "text/csv";		break;
 		}
 	    }
 
@@ -394,12 +393,7 @@ public class Time {
 	    String responseText = generateResponse(style);
 
 	    // send content and close request
-	    c.getResponseHeaders().set("Content-Type", cType);
-            c.sendResponseHeaders(200, responseText.length());
-            OutputStream rs = c.getResponseBody();
-            rs.write(responseText.getBytes());
-            rs.close();
+	    sendTextContent(c, responseText, contentType, responseCode);
 	}
     }
-
 }
