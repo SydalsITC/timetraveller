@@ -1,5 +1,5 @@
 # timetraveller
-Simple web server that just specifies the system time for time travel tests
+Simple web server that shows the system time and some environment variables which is useful e.g. for "time travel tests".
 
 ## About
 For a project where we shift containers through time a simple web server was needed to do basic tests.
@@ -7,7 +7,8 @@ It just needs to display the "system time" inside the container. So I decided to
 based web server for this task which displays the time inside the container in different human and
 machine readable formats.
 
-The image uses _libfaketime_ to modify the system time inside the container. For testing purposes,
+The image uses (libfaketime)[https://github.com/wolfcw/libfaketime]
+to modify the system time inside the container. For testing purposes,
 it gets installed right away into the webapp image. _If you'd like to move any app or container
 in time in a kubernetes/openshift environment, without modification of the image, then feel free
 to contact me at sydals.itc(at)gmail.com._

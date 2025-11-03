@@ -290,23 +290,25 @@ public class Time {
         @Override
         public void handle(HttpExchange c) throws IOException {
 
-	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
-	    String pathCalled   = c.getRequestURI().getPath();
-	    String[] pathArray  = pathCalled.split("[/]");
-            String contentType  = "text/plain";
+	    // get the seconds to calculate difference to from context path
+	    String secondsGiven = parmFromPathCalled(c);
+	    String contentType  = "text/plain";		// will be text/plain anyway in this handler
 	    int    responseCode = 200;
 	    String responseText = "";
 
 	    // check if request is valid and if so, convert LongInt and calculate difference to now()
-	    if (pathArray.length == 3) {
-		if( pathArray[2].matches("\\d*") ){
-		    long longGiven = Long.parseLong( pathArray[2] );
+	    if (secondsGiven != null) {
+		if( secondsGiven.matches("\\d*") ){
+		    long longGiven = Long.parseLong( secondsGiven );
 		    long since1970 = java.time.Instant.now().getEpochSecond();
-        	    responseText = "Difference to now() is " + Long.toString(since1970-longGiven) + " seconds\n";
-
+        	    responseText   = Long.toString(since1970-longGiven) +"\n";
 		} else {
-		    responseText = "Parameter is not numeric. Usage: /" + pathArray[1] + "/LongIntSecondsSince1970\n";
+		    responseCode = 500;			// parameter wasn't a valid integer
+		    responseText = msg_500_IntSrvErr;
 		}
+	    } else {
+		responseCode = 404;		// something's wrong with the path
+		responseText = msg_404_NotFound;
 	    }
 
 	    // send content and close request
