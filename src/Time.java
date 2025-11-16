@@ -373,26 +373,26 @@ public class Time {
         public void handle(HttpExchange c) throws IOException {
 
 	    // get the context path and split it up; [1]=>top context, [2]=>LongInt parameter
-	    String   pathCalled = c.getRequestURI().getPath();
-	    String[] pathArray  = pathCalled.split("[/]");
+	    String   dataFormat = parmFromPathCalled(c);
 
 	    // default format is plain text
-	    String style       = "text";
-	    int responseCode   = 200;
-	    String contentType = "text/plain";
+	    String contentType  = "text/plain";
+	    int responseCode    = 500;
+	    String responseText = msg_500_IntSrvErr;
 
 	    // set correct content type
-	    if (pathArray.length == 3) {
-		style = pathArray[2];
-		switch (style) {
+	    if (dataFormat != null) {
+		switch (dataFormat) {
 		    case "json": contentType = "application/json";	break;
 		    case "yaml": contentType = "application/x-yaml";	break;
 		    case "csv" : contentType = "text/csv";		break;
+		    default    : dataFormat  = "text";
 		}
-	    }
+		responseCode = 200;
 
-	    // generate the content
-	    String responseText = generateResponse(style);
+		// generate the content
+		responseText = generateResponse(dataFormat);
+	    }
 
 	    // send content and close request
 	    sendTextContent(c, responseText, contentType, responseCode);
